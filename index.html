@@ -1,1 +1,652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>야추다이스</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            color: #1a1a1a;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1a1a1a;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+
+        .die {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .die:hover {
+            border-color: #adb5bd;
+        }
+
+        .die.held {
+            background: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+        }
+
+        .die.empty {
+            color: #dee2e6;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 24px 0;
+        }
+
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #1a252f;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .scorecard {
+            margin-top: 32px;
+        }
+
+        .score-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .score-row:hover:not(.used):not(.disabled) {
+            background: #e9ecef;
+        }
+
+        .score-row.used {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .score-row.disabled {
+            cursor: not-allowed;
+        }
+
+        .score-name {
+            font-size: 15px;
+            color: #495057;
+        }
+
+        .score-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .score-row.used .score-value {
+            color: #1a1a1a;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 10px;
+            margin-top: 24px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal h2 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+        }
+
+        .modal p {
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .modal-score {
+            font-size: 48px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .die {
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>야추다이스</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <span class="info-label">남은 굴림</span>
+                <span class="info-value" id="rollsLeft">3</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">현재 점수</span>
+                <span class="info-value" id="currentScore">0</span>
+            </div>
+        </div>
+
+        <div class="dice-container" id="diceContainer">
+            <div class="die empty" data-index="0">-</div>
+            <div class="die empty" data-index="1">-</div>
+            <div class="die empty" data-index="2">-</div>
+            <div class="die empty" data-index="3">-</div>
+            <div class="die empty" data-index="4">-</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" id="rollBtn">주사위 굴리기</button>
+            <button class="btn-secondary" id="newGameBtn">새 게임</button>
+        </div>
+
+        <div class="scorecard">
+
+                      <div class="score-section">
+                <div class="section-title">상단 (숫자)</div>
+                <div class="score-row" data-category="ones">
+                    <span class="score-name">1 (에이스)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="twos">
+                    <span class="score-name">2 (듀스)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="threes">
+                    <span class="score-name">3 (트리)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="fours">
+                    <span class="score-name">4 (포)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="fives">
+                    <span class="score-name">5 (파이브)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="sixes">
+                    <span class="score-name">6 (식스)</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row used">
+                    <span class="score-name">보너스 (+35)</span>
+                    <span class="score-value" id="bonus">0</span>
+                </div>
+            </div>
+
+            <div class="score-section">
+                <div class="section-title">하단 (조합)</div>
+                <div class="score-row" data-category="choice">
+                    <span class="score-name">초이스</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="threeOfKind">
+                    <span class="score-name">3 카드</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="fourOfKind">
+                    <span class="score-name">4 카드</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="fullHouse">
+                    <span class="score-name">풀하우스</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="smallStraight">
+                    <span class="score-name">S. 스트레이트</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="largeStraight">
+                    <span class="score-name">L. 스트레이트</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="score-row" data-category="yacht">
+                    <span class="score-name">야추</span>
+                    <span class="score-value">-</span>
+                </div>
+            </div>
+
+            <div class="total-row">
+                <span>총점</span>
+                <span id="totalScore">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="gameOverModal">
+        <div class="modal">
+            <h2 id="modalTitle">게임 종료!</h2>
+            <p id="modalMessage">수고하셨습니다</p>
+            <div class="modal-score" id="modalScore">0</div>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="modalNewGame">새 게임</button>
+                <button class="btn-secondary" id="modalViewScore">점수 보기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dice = [0, 0, 0, 0, 0];
+        let heldDice = [false, false, false, false, false];
+        let rollsLeft = 3;
+        let scores = {};
+        let usedCategories = new Set();
+
+        const diceContainer = document.getElementById('diceContainer');
+        const rollBtn = document.getElementById('rollBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const rollsLeftDisplay = document.getElementById('rollsLeft');
+        const currentScoreDisplay = document.getElementById('currentScore');
+        const totalScoreDisplay = document.getElementById('totalScore');
+        const bonusDisplay = document.getElementById('bonus');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalScore = document.getElementById('modalScore');
+        const modalNewGame = document.getElementById('modalNewGame');
+        const modalViewScore = document.getElementById('modalViewScore');
+
+        function rollDice() {
+            if (rollsLeft <= 0) return;
+
+            for (let i = 0; i < 5; i++) {
+                if (!heldDice[i]) {
+                    dice[i] = Math.floor(Math.random() * 6) + 1;
+                }
+            }
+
+            rollsLeft--;
+            updateDisplay();
+            updateScoreOptions();
+        }
+
+        function toggleHold(index) {
+            if (dice[index] === 0) return;
+            heldDice[index] = !heldDice[index];
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            rollsLeftDisplay.textContent = rollsLeft;
+            
+            const diceElements = diceContainer.querySelectorAll('.die');
+            diceElements.forEach((die, index) => {
+                if (dice[index] === 0) {
+                    die.textContent = '-';
+                    die.classList.add('empty');
+                    die.classList.remove('held');
+                } else {
+                    die.textContent = dice[index];
+                    die.classList.remove('empty');
+                    if (heldDice[index]) {
+                        die.classList.add('held');
+                    } else {
+                        die.classList.remove('held');
+                    }
+                }
+            });
+
+            rollBtn.disabled = rollsLeft <= 0;
+        }
+
+        function updateScoreOptions() {
+            document.querySelectorAll('.score-row:not(.used)').forEach(row => {
+                const category = row.dataset.category;
+                if (!category) return;
+
+                const score = calculateScore(category);
+                const valueEl = row.querySelector('.score-value');
+                
+                if (rollsLeft < 3 && dice.some(d => d > 0)) {
+                    valueEl.textContent = score;
+                    row.classList.remove('disabled');
+                } else {
+                    valueEl.textContent = '-';
+                    row.classList.add('disabled');
+                }
+            });
+        }
+
+        function calculateScore(category) {
+            const counts = Array(7).fill(0);
+            dice.forEach(d => counts[d]++);
+
+            switch(category) {
+                case 'ones': return counts[1] * 1;
+                case 'twos': return counts[2] * 2;
+                case 'threes': return counts[3] * 3;
+                case 'fours': return counts[4] * 4;
+                case 'fives': return counts[5] * 5;
+                case 'sixes': return counts[6] * 6;
+                case 'choice': return dice.reduce((a, b) => a + b, 0);
+                case 'threeOfKind':
+                    return counts.some(c => c >= 3) ? dice.reduce((a, b) => a + b, 0) : 0;
+                case 'fourOfKind':
+                    return counts.some(c => c >= 4) ? dice.reduce((a, b) => a + b, 0) : 0;
+                case 'fullHouse':
+                    return (counts.includes(3) && counts.includes(2)) ? dice.reduce((a, b) => a + b, 0) : 0;
+                case 'smallStraight':
+                    const sorted = [...new Set(dice)].sort();
+                    for (let i = 0; i <= sorted.length - 4; i++) {
+                        if (sorted[i+1] === sorted[i]+1 && 
+                            sorted[i+2] === sorted[i]+2 && 
+                            sorted[i+3] === sorted[i]+3) {
+                            return 15;
+                        }
+                    }
+                    return 0;
+                case 'largeStraight':
+                    const sortedLarge = [...dice].sort().join('');
+                    return (sortedLarge === '12345' || sortedLarge === '23456') ? 30 : 0;
+                case 'yacht':
+                    return counts.some(c => c === 5) ? 50 : 0;
+                default:
+                    return 0;
+            }
+        }
+      
+                                if (sorted[i+1] === sorted[i]+1 && 
+                            sorted[i+2] === sorted[i]+2 && 
+                            sorted[i+3] === sorted[i]+3) {
+                            return 15;
+                        }
+                    }
+                    return 0;
+                case 'largeStraight':
+                    const sortedLarge = [...new Set(dice)].sort();
+                    for (let i = 0; i <= sortedLarge.length - 5; i++) {
+                        if (sortedLarge[i+1] === sortedLarge[i]+1 && 
+                            sortedLarge[i+2] === sortedLarge[i]+2 && 
+                            sortedLarge[i+3] === sortedLarge[i]+3 &&
+                            sortedLarge[i+4] === sortedLarge[i]+4) {
+                            return 30;
+                        }
+                    }
+                    return 0;
+                case 'yacht':
+                    return counts.some(c => c === 5) ? 50 : 0;
+                default:
+                    return 0;
+            }
+        }
+
+        function selectScore(category) {
+            if (usedCategories.has(category)) return;
+            if (rollsLeft === 3) return;
+            if (!dice.some(d => d > 0)) return;
+
+            const score = calculateScore(category);
+            scores[category] = score;
+            usedCategories.add(category);
+
+            const row = document.querySelector(`[data-category="${category}"]`);
+            row.classList.add('used');
+            row.querySelector('.score-value').textContent = score;
+
+            updateTotalScore();
+            resetTurn();
+
+            if (usedCategories.size === 13) {
+                endGame();
+            }
+        }
+
+        function updateTotalScore() {
+            const upperScore = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes']
+                .reduce((sum, cat) => sum + (scores[cat] || 0), 0);
+
+            const bonus = upperScore >= 63 ? 35 : 0;
+            bonusDisplay.textContent = bonus;
+
+            const lowerScore = ['choice', 'threeOfKind', 'fourOfKind', 'fullHouse', 
+                                'smallStraight', 'largeStraight', 'yacht']
+                .reduce((sum, cat) => sum + (scores[cat] || 0), 0);
+
+            const total = upperScore + bonus + lowerScore;
+            totalScoreDisplay.textContent = total;
+            currentScoreDisplay.textContent = total;
+        }
+
+        function resetTurn() {
+            dice = [0, 0, 0, 0, 0];
+            heldDice = [false, false, false, false, false];
+            rollsLeft = 3;
+            updateDisplay();
+            updateScoreOptions();
+        }
+
+        function endGame() {
+            const
+
+          Score.textContent = finalScore;
+            
+            if (finalScore >= 300) {
+                modalTitle.textContent = '🎉 대단해요!';
+                modalMessage.textContent = '환상적인 점수입니다!';
+            } else if (finalScore >= 200) {
+                modalTitle.textContent = '👏 훌륭해요!';
+                modalMessage.textContent = '정말 잘하셨어요!';
+            } else {
+                modalTitle.textContent = '게임 종료!';
+                modalMessage.textContent = '수고하셨습니다';
+            }
+
+            gameOverModal.classList.add('show');
+        }
+
+        function newGame() {
+            dice = [0, 0, 0, 0, 0];
+            heldDice = [false, false, false, false, false];
+            rollsLeft = 3;
+            scores = {};
+            usedCategories.clear();
+
+            document.querySelectorAll('.score-row[data-category]').forEach(row => {
+                row.classList.remove('used', 'disabled');
+                row.querySelector('.score-value').textContent = '-';
+            });
+
+            bonusDisplay.textContent = '0';
+            totalScoreDisplay.textContent = '0';
+            currentScoreDisplay.textContent = '0';
+
+            gameOverModal.classList.remove('show');
+            updateDisplay();
+        }
+
+        // Event Listeners
+        rollBtn.addEventListener('click', rollDice);
+        newGameBtn.addEventListener('click', newGame);
+        modalNewGame.addEventListener('click', newGame);
+        modalViewScore.addEventListener('click', () => {
+            gameOverModal.classList.remove('show');
+        });
+
+        diceContainer.addEventListener('click', (e) => {
+            const die = e.target.closest('.die');
+            if (die) {
+                const index = parseInt(die.dataset.index);
+                toggleHold(index);
+            }
+        });
+
+        document.querySelectorAll('.score-row[data-category]').forEach(row => {
+            row.addEventListener('click', () => {
+                const category = row.dataset.category;
+                selectScore(category);
+            });
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
